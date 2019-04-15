@@ -1,1 +1,12 @@
-
+{
+    "name": "elevator/call",
+    "description": "Microcontrollers project",
+    "type": "project",
+    "authors": [
+        {
+            "name": "Saddam",
+            "email": "saddam.asmatullayev@nu.edu.kz"
+        }
+    ],
+    "require": {}
+}
