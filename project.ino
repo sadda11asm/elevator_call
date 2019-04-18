@@ -1,6 +1,8 @@
 #include <SPI.h>
 #include <Ethernet.h>
-int devices[]={2,3,4,5,6,7,8,9,14,15};
+#include <Servo.h>
+
+int devices[]={2,3};
 #define MAX_STRING_LEN  20
 char tagStr[MAX_STRING_LEN] = "";
 char dataStr[MAX_STRING_LEN] = "";
@@ -11,29 +13,39 @@ int count=0;
 boolean tagFlag = false;
 boolean dataFlag = false;
 byte mac[] = { 0x90, 0xA2, 0xDA, 0x0D, 0xFE, 0xD2 };
-IPAddress ip(192, 168, 0 ,200); 
+IPAddress ip(10,1,235,208); 
 byte gateway[] = { 192,168,0,1 }; 
+IPAddress myDns(192, 168, 0, 1);
 
-byte server[] = { 192,168,0,107}; 
+
+Servo myservo;  // create servo object to control a servo
+Servo myservo2;
+
+char server[] = "elevator.nudl.kz";
 
 byte subnet[]={255,255,255,0};
 EthernetClient client;
 void setup()
 {
 Serial.begin(9600);
-Ethernet.begin(mac, ip, gateway,subnet);
- for(int i=0;i<10;i++)
+Ethernet.begin(mac);
+//Ethernet.begin(mac, ip, myDns);
+ for(int i=0;i<2;i++)
   {
    pinMode(devices[i],OUTPUT); 
   }
+  myservo.attach(6); 
+  myservo2.attach(5); 
 }
 void loop()
 {
-  if (client.connect(server,80)) {  //starts client connection, checks for connection
+  if (client.connect(server, 80)) {  //starts client connection, checks for connection
     Serial.println("connected");
     client.println("GET /test.xml HTTP/1.1");
-    client.println( "Host: localhost");
+    client.println( "Host: elevator.nudl.kz");
     client.println(); 
+    Serial.print(server);
+    Serial.println("/test.xml");
    } 
   else {
     Serial.println("connection failed"); //error message if no client connect
@@ -133,8 +145,8 @@ void clearStr (char* str) {
 
 
 void addChar (char ch, char* str) {
-  char *tagMsg  = "<ERROR>";
-  char *dataMsg = "-ERROR";
+  const char *tagMsg  = "<ERROR>";
+  const char *dataMsg = "-ERROR";
 
  
   if (strlen(str) > MAX_STRING_LEN - 2) {
@@ -156,7 +168,7 @@ void addChar (char ch, char* str) {
   }
 }
 
-boolean matchTag (char* searchTag) {
+boolean matchTag (const char* searchTag) {
   if ( strcmp(tagStr, searchTag) == 0 ) {
      return true;
   } else {
@@ -171,6 +183,15 @@ void devicescontrol(int devicescount, char *devicestate)
   {
     Serial.print("on..........on......");
     Serial.println(devicescount);
+    if (devicescount-1==0) {
+      myservo.write(20);
+      delay(1000);
+      myservo.write(90);
+    } else {
+      myservo2.write(10);
+      delay(1000);
+      myservo2.write(90);
+    }
     digitalWrite(devices[devicescount-1],HIGH);
   }
   else if(!strncmp("OFF",devicestate,3))
